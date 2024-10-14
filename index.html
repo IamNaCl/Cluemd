@@ -38,7 +38,7 @@
               <tr v-for="item in data.locations">
                 <td>
                   <button :class="['btn', 'btn-sm', data.states[item.state].buttonColor]"
-                          @click.stop="item.state = (item.state + 1) % data.states.length">
+                          @click.stop="onItemClick(item)">
                     <i :class="['bi', data.states[item.state].icon]"></i>
                   </button>
                 </td>
@@ -58,7 +58,7 @@
               <tr v-for="item in data.characters">
                 <td>
                   <button :class="['btn', 'btn-sm', data.states[item.state].buttonColor]"
-                          @click.stop="item.state = (item.state + 1) % data.states.length">
+                          @click.stop="onItemClick(item)">
                     <i :class="['bi', data.states[item.state].icon]"></i>
                   </button>
                 </td>
@@ -78,7 +78,7 @@
               <tr v-for="item in data.weapons">
                 <td>
                   <button :class="['btn', 'btn-sm', data.states[item.state].buttonColor]"
-                          @click.stop="item.state = (item.state + 1) % data.states.length">
+                          @click.stop="onItemClick(item)">
                     <i :class="['bi', data.states[item.state].icon]"></i>
                   </button>
                 </td>
@@ -111,7 +111,7 @@
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script>
-      const { ref, computed, createApp } = Vue;
+      const { ref, computed, createApp, onMounted } = Vue;
 
       const staticData = {
         characters: [
@@ -162,6 +162,26 @@
         setup() {
           const data = ref(staticData);
 
+          const mounted = onMounted(() => {
+            for (const pair of data.value.characters) {
+              const existent = localStorage.getItem(pair.name);
+              if (existent)
+                pair.state = parseInt(existent);
+            }
+
+            for (const pair of data.value.locations) {
+              const existent = localStorage.getItem(pair.name);
+              if (existent)
+                pair.state = parseInt(existent);
+            }
+
+            for (const pair of data.value.weapons) {
+              const existent = localStorage.getItem(pair.name);
+              if (existent)
+                pair.state = parseInt(existent);
+            }
+          });
+
           const clearStates = () => {
             if (!confirm('Are you sure you want to clear the board?'))
               return;
@@ -173,9 +193,15 @@
             for (const item of data.value.weapons)
               item.state = 0;
 
+            localStorage.clear();
           };
 
-          return { data, clearStates };
+          const onItemClick = (item) => {
+            item.state = (item.state + 1) % data.value.states.length;
+            localStorage.setItem(item.name, item.state);
+          };
+
+          return { data, clearStates, onItemClick, mounted };
         }
       }).mount('#app');
     </script>
